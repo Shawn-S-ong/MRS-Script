@@ -51,36 +51,6 @@ class Dataset(Dataset):
         full_dft_i = torch.from_numpy(full_dft_i).to(torch.float)
         mask = torch.from_numpy(mask).to(torch.float)
 
-        # samp_r = torch.unsqueeze(samp_r, 0)
-        # samp_i = torch.unsqueeze(samp_i, 0)
-        # samp_dft_r = torch.unsqueeze(samp_dft_r, 0)
-        # samp_dft_i = torch.unsqueeze(samp_dft_i, 0)
-        # full_dft_r = torch.unsqueeze(full_dft_r, 0)
-        # full_dft_i = torch.unsqueeze(full_dft_i, 0)
-        # mask = torch.unsqueeze(mask, 0)
-
-        ## For Real data
-
-        # # components['samp_r'][0] = 0.5 * components['samp_r'][0]
-        # samp_r = torch.from_numpy(components['samp_r']).to(torch.float)
-        # samp_r = torch.unsqueeze(samp_r, 0)
-        # # components['samp_i'][0] = 0.5 * components['samp_i'][0]
-        # samp_i = torch.from_numpy(components['samp_i']).to(torch.float)
-        # samp_i = torch.unsqueeze(samp_i, 0)
-        # # full_r = torch.from_numpy(components['full_r']).to(torch.float)
-        # # full_r = torch.unsqueeze(full_r, 0)
-        # # full_i = torch.from_numpy(components['full_i']).to(torch.float)
-        # # full_i = torch.unsqueeze(full_i, 0)
-        # samp_dft_r = torch.from_numpy(components['samp_dft_r']).to(torch.float)
-        # samp_dft_r = torch.unsqueeze(samp_dft_r, 0)
-        # samp_dft_i = torch.from_numpy(components['samp_dft_i']).to(torch.float)
-        # samp_dft_i = torch.unsqueeze(samp_dft_i, 0)
-        # full_dft_r = torch.from_numpy(components['full_dft_r']).to(torch.float)
-        # full_dft_r = torch.unsqueeze(full_dft_r, 0)
-        # full_dft_i = torch.from_numpy(components['full_dft_i']).to(torch.float)
-        # full_dft_i = torch.unsqueeze(full_dft_i, 0)
-        # mask = torch.from_numpy(components['mask']).to(torch.float)
-        # mask = torch.unsqueeze(mask, 0)
 
         return samp_r, samp_i, samp_dft_r, samp_dft_i, full_dft_r, full_dft_i, mask
 
