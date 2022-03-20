@@ -42,15 +42,6 @@ def FFT1D(x):
 
 model = torch.load(opt.model, map_location=lambda storage, loc: storage)["model"]
 
-# mask = np.loadtxt('test_format/1D_Subset_Coordinates/IN_SC_1.txt')[:, 1]
-# mask1 = mask
-# dic, k_data = ng.fileio.rnmrtk.read(
-#     'test_format/1D_Time_Full/IN_TF_C_1.sec')
-#
-# scale = np.abs(k_data[0])
-# k_data = k_data/scale
-# k_data[0] = 0.5 * k_data[0]
-# k_data[0] = 0.5 * k_data[0]
 
 test_data_len = 1024
 
@@ -105,7 +96,8 @@ for i in range(test_data_len):
         model = model.cpu()
 
     start_time = time.time()
-
+    
+    # Prediction Step
     ini_r, ini_i, y_r, y_i = model(samp_dft_r, samp_dft_i, samp_r, samp_i, mask)
 
 
@@ -133,14 +125,14 @@ for i in range(test_data_len):
     data[:, i] = new_data
 
 
-
+# Save the data in the required 2D format
 dic, _ = ng.fileio.rnmrtk.read(
     'R:/MLNMR2022-Q4755/For_Testing/2D_HSQC_1/input_time_full/f2_proc.sec')
 udic = ng.fileio.rnmrtk.guess_udic(dic, data)
 
 dic['dom'] = ['F', 'F']
-dic['npts'] = [512, 1024]
-dic['nptype'] = ['R', 'R']
+dic['npts'] = [256, 1024]
+dic['nptype'] = ['C', 'R']
 dic['layout'] = ([512, 1024], ['F1', 'F2'])
 print(dic)
 
