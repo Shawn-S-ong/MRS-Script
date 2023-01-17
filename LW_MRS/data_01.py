@@ -5,6 +5,7 @@ import scipy.io as scio
 import argparse
 from pathlib import Path
 import os.path
+import multiprocessing
 
 parser = argparse.ArgumentParser(description='MRSNet')
 parser.add_argument(
@@ -98,7 +99,7 @@ if not os.path.exists(train_path_350):
 #     os.chdir(opt.train_path_350)
 #     scio.savemat('train_data_' + str(i+1) + '.mat', {'real': np.real(data), 'imag': np.imag(data), 'mask': mask})
 
-for i in range(train_num_samp):
+def process_training_data(i):
     ### Extract real mask
     _, data = ng.fileio.rnmrtk.read(
         os.path.join(mask_path , str('1D_Time_Full/IN_TF_C_' + str(i+1) + '.sec')))
@@ -145,6 +146,11 @@ for i in range(train_num_samp):
     os.chdir(train_path_350)
     scio.savemat('train_data_' + str(i+1) + '.mat', {'real': np.real(data), 'imag': np.imag(data),
                                                      'mask': mask})
+#for i in range(train_num_samp):
+
+pool = multiprocessing.Pool()
+pool.map(process_training_data, range(train_num_samp))
+
 
 # path2 = 'C:/Users/s4548361/Desktop/ML_test_data_easy_hsqc.tar/ML_test_data_easy_hsqc/Exp_Easy_HSQC/Raw_data/Subsampled/f2_proc_sub.sec'
 #
