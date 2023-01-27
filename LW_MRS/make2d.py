@@ -1,4 +1,3 @@
-import argparse
 import os
 import torch
 import time
@@ -12,16 +11,27 @@ import torch.nn as nn
 from sklearn.metrics import mean_squared_error
 import nmrglue as ng
 
+import MRSNetConfig
+from pathlib import Path
+
+MRSNetConfig.parser.description="MRS Demo"
+
+argv = MRSNetConfig.readConfig('Global', 'Training', 'Demo')
+MRSNetConfig.parser.add_argument("--cuda", action="store_true", help="use cuda?")
+MRSNetConfig.parser.add_argument("--model", type=str, help="model path")
+MRSNetConfig.parser.add_argument("--gpus", type=str, help="gpu ids (default: 0)")
+MRSNetConfig.parser.add_argument('--basedir', type=Path, help='base directory for input and output data (leave blank for none)')
+MRSNetConfig.parser.add_argument('--expdir', type=Path, help='[sub]directory for experiment data (default: blank)')
+MRSNetConfig.parser.add_argument('--us_nmr_data', type=Path, help='uniformly sampled NMR data')
+MRSNetConfig.parser.add_argument('--nus_nmr_data', type=Path, help='non-uniformly sampled NMR data')
+opt = MRSNetConfig.parser.parse_args()
+
+# Define params that stay the same across all 12 iteratiosn
+cuda = opt.cuda
+path_test_full = os.path.join(opt.basedir, opt.expdir, opt.us_nmr_data)
+path_test_sub  = os.path.join(opt.basedir, opt.expdir, opt.nus_nmr_data)
+
 for iter_number in [12]:
-    parser = argparse.ArgumentParser(description="MRS Demo")
-    parser.add_argument("--cuda", action="store_true", help="use cuda?")
-    parser.add_argument("--model", default="checkpoint_MRSNet_global/model_epoch_100.pth", type=str, help="model path")
-    # parser.add_argument("--model", default="checkpoint_256/model_epoch_100.pth", type=str, help="model path")
-    parser.add_argument("--gpus", default="0", type=str, help="gpu ids (default: 0)")
-
-    opt = parser.parse_args()
-    cuda = opt.cuda
-
 
     if cuda:
         print("=> use gpu id: '{}'".format(opt.gpus))
@@ -51,12 +61,16 @@ for iter_number in [12]:
     spec_2d_recon = np.zeros((700, 1024))
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
-    path_test_full = "C:/Users/s4548361/Desktop/Exp_Easy_HSQC/Raw_data/Full/f2_proc.sec"
-    path_test_sub = "C:/Users/s4548361/Desktop/Exp_Easy_HSQC/Raw_data/Subsampled/f2_proc_sub.sec"
+    #Paths now set in config file. Leaving below as reference for initial merge of config system.
+    #path_test_full = "C:/Users/s4548361/Desktop/Exp_Easy_HSQC/Raw_data/Full/f2_proc.sec"
+    #path_test_sub = "C:/Users/s4548361/Desktop/Exp_Easy_HSQC/Raw_data/Subsampled/f2_proc_sub.sec"
 
 
-    _, sub_data = ng.fileio.rnmrtk.read(path_test_sub)
-    _, full_data = ng.fileio.rnmrtk.read(path_test_full)
+    # Move common reads and transformations outside of loop.
+
+    _,   sub_data = ng.fileio.rnmrtk.read(path_test_sub)
+    #Read dictionary as well, as we will use it later to determine output dic.
+    dic, full_data = ng.fileio.rnmrtk.read(path_test_full)
 
     sub_data = np.transpose(sub_data)
     sub_data = sub_data[:, 0::2] + 1j * sub_data[:, 1::2]
@@ -133,7 +147,8 @@ for iter_number in [12]:
 
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-        model = model.cuda()
+        if cuda:
+            model = model.cuda()
 
         start_time = time.time()
 
@@ -178,9 +193,9 @@ for iter_number in [12]:
 
     # scio.savemat('final.mat', {'recon': spec_2d_recon})
 
-
-    dic, _ = ng.fileio.rnmrtk.read(
-        "C:/Users/s4548361/Desktop/Exp_Easy_HSQC/Raw_data/Full/f2_proc.sec")
+    #This read is only to help determine a udic for saving the output data,
+    #and has been moved outside the loop.
+    #dic, _ = ng.fileio.rnmrtk.read(path_test_full)
     udic = ng.fileio.rnmrtk.guess_udic(dic, recon_data)
 
     dic['dom'] = ['F', 'F']

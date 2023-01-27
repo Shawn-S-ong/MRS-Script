@@ -1,20 +1,25 @@
 import torch
 import os
 import torch.backends.cudnn as cudnn
-import argparse
 from torch.utils.data import DataLoader
 from MRSNet import MRSNet, weights_init
 
 from TrainingDataLoad_global import *
 
-parser = argparse.ArgumentParser(description='MRSNet')
+import MRSNetConfig
+from pathlib import Path
 
-parser.add_argument('--batchSize', type=int, default=64, help='Training batch size')
-parser.add_argument('--testBatchSize', type=int, default=64, help='Testing batch size')
-parser.add_argument('--nEpochs', type=int, default=100, help='Number of epochs to train for')
-parser.add_argument('--lr', type=float, default=0.001, help='Learning Rate. Default=0.01')
-parser.add_argument('--seed', type=int, default=1, help='Random seed to use. Default=1')
-opt = parser.parse_args()
+MRSNetConfig.readConfig('Global', 'Training')
+
+MRSNetConfig.parser.add_argument('--basedir', type=Path, help='base directory for input and output data (leave blank for none)')
+MRSNetConfig.parser.add_argument('--train_path', type=Path, help='[sub]path to training data')
+MRSNetConfig.parser.add_argument('--batchSize', type=int, default=64, help='Training batch size')
+MRSNetConfig.parser.add_argument('--testBatchSize', type=int, default=64, help='Testing batch size')
+MRSNetConfig.parser.add_argument('--nEpochs', type=int, default=100, help='Number of epochs to train for')
+MRSNetConfig.parser.add_argument('--lr', type=float, default=0.001, help='Learning Rate. Default=0.01')
+MRSNetConfig.parser.add_argument('--seed', type=int, default=1, help='Random seed to use. Default=1')
+MRSNetConfig.parser.add_argument("--model_out_path", default="checkpoint_MRSNet_global", type=Path, help="model output path (no basedir)")
+opt = MRSNetConfig.parser.parse_args()
 
 class proj1():
     def __init__(self, config, training_set, testing_set=None):
@@ -45,10 +50,10 @@ class proj1():
         self.scheduler = torch.optim.lr_scheduler.MultiStepLR(self.optimizer, milestones=[50, 100, 150, 200, 250], gamma=0.7)
 
     def save_checkpoint(self, epoch):
-        model_out_path = "checkpoint_MRSNet_global/" + "model_epoch_{}.pth".format(epoch)
+        model_out_path = os.path.join(opt.model_out_path, "model_epoch_{}.pth".format(epoch))
         state = {"epoch": epoch, "model": self.model}
-        if not os.path.exists("checkpoint_MRSNet_global/"):
-            os.makedirs("checkpoint_MRSNet_global/")
+        if not os.path.exists(opt.model_out_path):
+            os.makedirs(opt.model_out_path)
 
         torch.save(state, model_out_path)
 
@@ -140,13 +145,12 @@ class proj1():
                 self.save_checkpoint(epoch)
 
 def main():
-    opt = parser.parse_args()
     print(opt)
 
     print("===> Loading datasets")
     # Load train set  "C:/Users/s4548361/Desktop/Train_data_350_32or16/train_dataset_350_32/"
 
-    train_path = "C:/Users/s4548361/Desktop/LW_MRS_NOISE_FREE/train_dataset_350_noise_free/"
+    train_path = os.path.join(opt.basedir,opt.train_path,'')
     train_dataset = DataSet(train_path)
     train_dataloader = DataLoader(train_dataset, shuffle=True, batch_size=opt.batchSize, drop_last=True)
     # # Load test set
