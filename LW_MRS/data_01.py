@@ -2,43 +2,39 @@ import nmrglue as ng
 import numpy as np
 import os
 import scipy.io as scio
-import argparse
 from pathlib import Path
-import os.path
 import multiprocessing
 
-parser = argparse.ArgumentParser(description='MRSNet')
-parser.add_argument(
+import MRSNetConfig
+
+MRSNetConfig.readConfig('Global', 'Data')
+
+MRSNetConfig.parser.add_argument(
         '--basedir',
         type=Path,
-        default='C:/Users/s4548361/Desktop',
-        help='Base directory for input and output data'
+        help='base directory for input and output data (leave blank for none)'
 )
-parser.add_argument(
+MRSNetConfig.parser.add_argument(
         '--train_path',
         type=Path,
-        default='LW_MRS_NOISE_FREE/train_dataset_350_noise_free/',
-        help='Subpath to training data'
+        help='[sub]path to training data'
 )
-parser.add_argument(
+MRSNetConfig.parser.add_argument(
         '--data_path',
         type=Path,
-        default='T_10000_350_64/',
-        help='Subpath to training data'
+        help='[sub]path to training data'
 )
-parser.add_argument(
+MRSNetConfig.parser.add_argument(
         '--mask_path',
         type=Path,
-        default='T_10000_350_64/',
-        help='Subpath to mask data'
+        help='[sub]path to mask data'
 )
-parser.add_argument(
+MRSNetConfig.parser.add_argument(
         '--train_num_samp',
         type=int,
-        default=10,
-        help='Number of training samples'
+        help='number of training samples'
 )
-opt = parser.parse_args()
+opt = MRSNetConfig.parser.parse_args()
 
 train_num_samp = opt.train_num_samp
 

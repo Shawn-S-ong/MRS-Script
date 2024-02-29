@@ -1,5 +1,6 @@
 import nmrglue as ng
 import numpy as np
+
 import matplotlib.pyplot as plt
 import scipy.io as scio
 import torch
@@ -9,16 +10,37 @@ import os
 import time
 import math
 
+import MRSNetConfig
+from pathlib import Path
+
+MRSNetConfig.readConfig('Global', 'Training', 'Demo')
+
+MRSNetConfig.parser.description="MRS Demo"
+MRSNetConfig.parser.add_argument("--cuda", action="store_true", help="use cuda?")
+MRSNetConfig.parser.add_argument("--model", type=Path, help="model path")
+MRSNetConfig.parser.add_argument("--gpus", default="0", type=str, help="gpu ids (default: 0)")
+MRSNetConfig.parser.add_argument('--basedir', type=Path, help='base directory for input and output data (leave blank for none)')
+MRSNetConfig.parser.add_argument('--expdir', type=Path, help='[sub]directory for experiment data (default: blank)')
+MRSNetConfig.parser.add_argument('--us_nmr_data', type=Path, help='uniformly sampled NMR data')
+MRSNetConfig.parser.add_argument('--nus_nmr_data', type=Path, help='non-uniformly sampled NMR data')
+MRSNetConfig.parser.add_argument('--train_path', type=Path, help='[sub]path to training data')
+opt = MRSNetConfig.parser.parse_args()
+
+cuda = opt.cuda
+
 path = "C:/Users/s4548361/Desktop/Full/f2_proc.sec"
 path2 = "C:/Users/s4548361/Desktop/Subsampled/f2_proc_sub.sec"
 path3 = 'C:/Users/s4548361/Desktop/ML_test_data_easy_hsqc.tar/ML_test_data_easy_hsqc/Exp_Easy_HSQC/MaxEnt/maxent.sec'
 path4 = 'C:/Users/s4548361/Desktop/ML_test_data_easy_hsqc.tar/ML_test_data_easy_hsqc/Exp_Easy_HSQC/FT_data/2DFT.sec'
 path5 = 'C:/Users/s4548361/Desktop/ML_test_data_easy_hsqc.tar/ML_test_data_easy_hsqc/Exp_Easy_HSQC/FT_data/extrapolated/2DLPFT.sec'
 
-path_test_full = 'C:/Users/s4548361/Desktop/MRS_new/test_data/full/f2_proc.sec'
-path_test_sub = 'test_data/sub/f2_proc_sub.sec'
+path_test_full = os.path.join(opt.basedir, opt.expdir, opt.us_nmr_data)
+path_test_sub  = os.path.join(opt.basedir, opt.expdir, opt.nus_nmr_data)
+train_path_350 = os.path.join(opt.basedir,opt.train_path)
+#path_test_full = 'C:/Users/s4548361/Desktop/MRS_new/test_data/full/f2_proc.sec'
+#path_test_sub = 'test_data/sub/f2_proc_sub.sec'
 dicfull, datafull = ng.fileio.rnmrtk.read(
-    path)
+    path_test_full)
 
 #
 # Read in the .par/.sec files using NMR glue
@@ -79,7 +101,7 @@ label = label / _range
 Prob = torch.tensor(-1)
 SNRs = torch.tensor([50, 40, 20, 10])
 
-info = scio.loadmat('train_dataset_350_noise_free/train_data_1.mat')
+info = scio.loadmat(os.path.join(train_path_350, 'train_data_1.mat'))
 mask = info['mask']
 
 image = np.multiply(label, mask)
@@ -156,17 +178,8 @@ plt.title('Global_lw'+str(llw))
 plt.show()
 
 
-
-
-
 for iter_number in [12]:
-    parser = argparse.ArgumentParser(description="MRS Demo")
-    parser.add_argument("--cuda", action="store_true", help="use cuda?")
-    parser.add_argument("--model", default="checkpoint_MRSNet_global/model_epoch_100.pth", type=str, help="model path")
-    parser.add_argument("--gpus", default="0", type=str, help="gpu ids (default: 0)")
 
-    opt = parser.parse_args()
-    cuda = opt.cuda
 
 
     if cuda:
@@ -193,7 +206,8 @@ for iter_number in [12]:
 
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
-    model = model.cuda()
+    if cuda:
+        model = model.cuda()
 
     start_time = time.time()
 
